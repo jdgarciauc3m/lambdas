@@ -1,0 +1,185 @@
+\section{Binding function arguments}
+
+\begin{frame}[t]{Why \texttt{bind}?}
+  \begin{itemize}
+    \item \cppid{bind} is a new function replacing
+          \cppid{bind1st} and \cppid{bind2nd}.
+
+    \mode<presentation>{\vfill\pause}
+    \item Solves problems from C++98.
+      \begin{itemize}
+        \item Only could bind first or (exclusive or!) second argument.
+        \item Only could bind one argument.
+        \item Could not be used to bind reference arguments.
+        \item Need for extra function objects:
+          \begin{itemize}
+            \item \cppid{ptr\_fun}, \cppid{mem\_fun} y \cppid{mem\_fun\_ref}.
+          \end{itemize}
+      \end{itemize}
+
+    \mode<presentation>{\vfill\pause}
+    \item Header \cppid{<functional>}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Binding in function calls}
+  \begin{itemize}
+    \item \cppid{bind()} generates a function object from
+      \begin{itemize}
+        \item A callable entity (function object, function, lambda, \ldots).
+
+\begin{lstlisting}
+void f(int x, int y, int z);
+auto g = std::bind(f,1,3,5);
+g(); // f(1,3,5);
+\end{lstlisting}
+
+        \pause
+        \item An specification of arguments binding:
+          \begin{itemize}
+            \item A concrete value to be used for an argument.
+            \item An specification to bind a function call argument with
+                  the function object parameter.
+          \end{itemize}
+\begin{lstlisting}
+using namespace std::placeholders;
+auto h = std::bind(f, 7, _1, _2);
+h(3,4); // f(7,3,4);
+h(1,9); // f(7,1,9);
+\end{lstlisting}
+
+        \pause
+        \item All placeholders in (\cppid{\_1}, \cppid{\_2}, ...) namespace
+              \cppid{std::placeholders}.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Overloaded functions}
+\begin{itemize}
+  \item Binding an overloaded function, requires
+        non ambiguously specifying which overload to select.
+\begin{lstlisting}
+void f(int, int);
+void f(double, double);
+
+using namespace std::placeholders;
+auto g = std::bind(f, 1, _1); // Error. f() is overloaded
+auto g2 = std::bind(static_cast<void (*)(int, int)>(f), 1, _1); // OK
+
+using task = void(*)(int,int);
+auto h = std::bind(static_cast<task>(f), 1, _1); // OK
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Try to bind reference parameters}
+\begin{itemize}
+  \item \textbad{Problem}: \cppid{bind} takes expressions as arguments.
+    \begin{itemize}
+      \item If the bound function takes a reference parameter,
+            an \textbad{undesired effect} happens.
+    \end{itemize}
+\begin{lstlisting}
+void f(int & i) {
+  i = 42;
+}
+
+void g() {
+  int x=0;
+  f(x); // x is 42
+
+  int y=0;
+  using namespace std::placeholders;
+  auto h = std::bind(f, _1);
+  auto k = std::bind(f, y);
+  h(y); // OK. Modifies y to 42
+  k(); // Bad. y is 0, as bind makes a copy of y
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Solving reference parameters binding}
+\begin{itemize}
+  \item The standard library offers type \cppid{reference\_wrapper<T>} 
+        and two adapter functions:
+    \begin{itemize}
+      \item \cppid{ref(x)} for reference parameters.
+      \item \cppid{cref(x)} for constant reference parameters.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textgood{Solution}: Use a reference adapter.
+\begin{lstlisting}
+void f(int & i) {
+  i = 42;
+}
+
+void g() {
+  int y=0;
+  using namespace std::placeholders;
+  auto k = std::bind(f, std::ref(y));
+  k();
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Member functions binding}
+\begin{itemize}
+  \item \cppid{bind} supports binding for non static member functions.
+\begin{lstlisting}
+class window {
+public:
+  // ...
+  void click(int x, int y, status e);
+  // ...
+};
+
+void f(window & v) {
+  set_click_cb(std::bind(&window::click, v, _1, _2, status::normal));
+  // ...
+}
+\end{lstlisting}
+  \item Also accepts (instead of an object), a pointer, or a smart pointer.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Alternatives to \texttt{std::bind()}}
+\begin{columns}[T]
+
+\column{.5\textwidth}
+\begin{block}{std::bind}
+\begin{lstlisting}
+void f(int & i) {
+  i = 42;
+}
+
+void g() {
+  int y=0;
+  using namespace std::placeholders;
+  auto h = std::bind(f, _1);
+  h(std::ref(y));
+}
+\end{lstlisting}
+\end{block}
+
+\column{.5\textwidth}
+\begin{block}{Lambdas}
+\begin{lstlisting}
+void f(int & i) {
+  i = 42;
+}
+
+void g() {
+  int y=0;
+  auto h = [](int & x) { f(x); };
+  h(y);
+}
+\end{lstlisting}
+\end{block}
+
+\end{columns}
+
+\end{frame}
