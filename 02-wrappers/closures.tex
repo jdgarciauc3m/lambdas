@@ -1,0 +1,55 @@
+\section{Closures}
+
+\begin{frame}[t,fragile]{Storing closures}
+  \begin{itemize}
+    \item Every \textgood{lambda expression} results in
+          a \textmark{unique} compiler generated type.
+      \begin{itemize}
+        \item You \textbad{cannot} know the name of such type.
+        \item But, the value can be stored thanks to \cppkey{auto}.
+      \end{itemize}
+\begin{lstlisting}
+// is_even is initialized with lambda
+auto is_even = [](int x) { return x%2 == 0; }; 
+copy_if(v.begin(), v.end(), w.begin(), is_even);
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item Each \textgood{lambda expression} results in a \textmark{distinct type}.
+\begin{lstlisting}
+auto f = [](int x) { return x%2 == 0; };
+auto g = [](int x) { return x%2 == 0; };
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item The \textgood{closure} is created in the \textmark{smallest enclosing scope}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Polymorphic closure wrapper}
+  \begin{itemize}
+    \item Stores a closure in a polymorphic function wrapper.
+\begin{lstlisting}
+std::function<bool(int)> is_even = [](int x) { return x%2 == 0; };
+std::copy_if(v.begin(), v.end(), w.begin(), is_even);
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item Allows recursive lambdas.
+\begin{lstlisting}
+std::function<int(int)> factorial = 
+  [&](int x) { return (x==1) ? 1 : (x * factorial(x-1)); };
+\end{lstlisting}
+
+    \mode<presentation>{\vfill\pause}
+    \item The \textmark{template argument} of \cppid{function} 
+          is the \textgood{function type}.
+\begin{lstlisting}
+std::function<bool(int)> f = [](int x) { return x%2 == 0; };
+std::function<int(int,int)> g = [](int x, int y) { return x+y; };
+std::function<auto (int)->std::string> h = [](int x) { 
+  return std::to_string(x); 
+}
+\end{lstlisting}
+  \end{itemize}
+\end{frame}

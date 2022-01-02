@@ -1,0 +1,180 @@
+\section{\texttt{auto} versus \texttt{function}}
+
+\begin{frame}[t]{Performace}
+  \begin{itemize}
+    \item When \cppkey{auto} is used a \textmark{copy} of the \textgood{closure} is made.
+      \begin{itemize}
+        \item Invoking the closure and its copy has the same cost.
+      \end{itemize}
+
+    \mode<presentation>{\vfill\pause}
+    \item When \cppid{std::function} is used a \textmark{hidden polymorphic pointer}
+          with \textgood{type erasure} is used.
+      \begin{itemize}
+        \item Invoking the \cppid{std::function} requires as a minimum a 
+              \textgood{virtual function call}.
+        \item It might require dynamic memory on the heap.
+      \end{itemize}
+
+    \mode<presentation>{\vfill\pause}
+    \item \textenum{Cases} to consider:
+      \begin{itemize}
+        \item \textmark{Function parameters} of callable types.
+        \item \textmark{Return values} of callable types.
+        \item Class \textmark{data members} of callable types.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Passing a lambda \texttt{std::function}}
+\begin{itemize}
+  \item An \cppid{std::function} parameter.
+\end{itemize}
+\begin{lstlisting}
+void print_coordinates(const std::vector<point> & points,
+    std::function<void(int,int)> printer)
+{
+  for (const auto & p : points) {
+    printer(p.x,p.y);
+  }
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[escapechar=@]
+std::vector<point> v = get_points();
+print_coordinates(v, [](int x, int y) {
+  std::cout << "[" << x << " , " << y << "]\n";
+});
+@\pause@
+print_coordinates(v, [&canvas] (int x, int y) {
+  canvas.draw(x,y);
+});
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Passing a lambda as template argument}
+\begin{itemize}
+  \item A \textmark{template argument}.
+\end{itemize}
+\begin{lstlisting}
+template <typename P>
+void print_coordinates(const std::vector<point> & points, P printer) 
+{
+  for (const auto & p : points) {
+    printer(p.x,p.y);
+  }
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}[escapechar=@]
+std::vector<point> v = get_points();
+print_coordinates(v, [](int x, int y) {
+  std::cout << "[" << x << " , " << y << "]\n";
+});
+@\pause@
+print_coordinates(v, [&canvas] (int x, int y) {
+  canvas.draw(x,y);
+});
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Returning a lambda as \texttt{std::function}}
+\begin{lstlisting}
+std::function<std::string(int)> compose(
+    std::function<int(int)> f, std::function<std::string(int)> g) 
+{
+  auto r = [](int x) {
+    return g(f(x));
+  }
+  return r;
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+auto h = compose(
+  [](int x) { return x*x; }
+  [](int x) { return std::to_string(x); }
+);
+
+std::cout << h(10) << " , " << h(20) << "\n";
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Returning a lambda as template argument}
+\begin{lstlisting}
+template <typename R, typename F, typename G>
+R compose(F f, G g) {
+  auto r = [](int x) {
+    return g(f(x));
+  }
+  return r;
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+auto h = compose<std::string(int)>(
+  [](int x) { return x*x; }
+  [](int x) { return std::to_string(x); }
+);
+
+std::cout << h(10) << " , " << h(20) << "\n";
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Returning a lambda as deduced return value}
+\begin{lstlisting}
+template <typename F, typename G>
+auto compose(F f, G g) {
+  auto r = [](int x) {
+    return g(f(x));
+  }
+  return r;
+}
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{lstlisting}
+auto h = compose(
+  [](int x) { return x*x; }
+  [](int x) { return std::to_string(x); }
+);
+
+std::cout << h(10) << " , " << h(20) << "\n";
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Tradeoffs}
+\begin{itemize}
+  \item \cppid{std::function}:
+    \begin{itemize}
+      \item A single function is generated.
+      \item Extra overhead in function calls.
+    \end{itemize}
+
+  \mode<presentation>{\vfill\pause}
+  \item \textgood{Templates}:
+    \begin{itemize}
+      \item Each lambda expression generates a distinct unique type.
+      \item A different function is generated per call.
+    \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Storing a lambda as data member}
+\begin{lstlisting}
+class window{
+public:
+  // ...
+  register_click_callback(std::function<void(int,int)> f) { click_cb = f; }
+  
+  process_click(int x, int y) { click_cb(x,y); }
+  // ...
+private:
+  std::function<void(int,int)> click_cb;
+};
+\end{lstlisting}
+\end{frame}
