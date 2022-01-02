@@ -1,0 +1,47 @@
+\section{Initializing members of lambdas (C++14)}
+
+\begin{frame}[fragile]{Initializing in a capture}
+\begin{itemize}
+  \item Allow to declare and initialize non static data members in the closure object.
+    \begin{itemize}
+      \item Even if they do not exist in the context where the lambda expression is defined.
+    \end{itemize}
+\begin{lstlisting}
+auto f = [low = lower_bound(), up = upper_bound() ] (int x) -> int {
+  if (x<low) return low;
+  if (x>up) return up;
+  return x;
+};
+
+auto x = f(10);
+auto y = f(20);
+\end{lstlisting}
+  \item \cppid{low} and \cppid{up} 
+        are data members from the closure object.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Accessing data members from a lambda}
+\begin{itemize}
+  \item An alternative to capturing \cppkey{this} to gain access to
+        a data member.
+\end{itemize}
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int add_range() {
+    int result = 0;
+    std::for_each(v.begin(), v.end(),
+      [min=minv,max=maxv,&result](int x) {
+        if (x > max) return;
+        if (x < min) return;
+        result += x;
+      });
+    return result;
+  }
+};
+\end{lstlisting}
+\end{frame}
+

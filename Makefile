@@ -18,6 +18,7 @@ ALL_SLIDES_FINAL_PDF=
 include guide/Makefile.def
 include 01-intro/Makefile.def
 include 02-wrappers/Makefile.def
+include 03-init-captures/Makefile.def
 
 ALL_FINAL_PDF=\
 $(FINAL_DIR) \
@@ -43,3 +44,4 @@ $(FINAL_DIR):
 include $(GUIDE_BASE)/Makefile.mk
 include $(INTRO_BASE)/Makefile.mk
 include $(WRAPPERS_BASE)/Makefile.mk
+include $(INITCAP_BASE)/Makefile.mk

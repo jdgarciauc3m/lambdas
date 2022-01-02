@@ -1,0 +1,56 @@
+\section{Move capture in lambda expressions (C++14)}
+\label{sec:move-capture-lambda}
+
+\begin{frame}[t,fragile]{Problem with C++11 lambdas}
+\begin{itemize}
+  \item In C++11 objects may be \textmark{captured}
+        by \textgood{value} or by \textgood{reference}.
+    \begin{itemize}
+      \item What happens with \textbad{non copyable} types?
+      \item What happens with \textbad{expensive to copy} types?
+    \end{itemize}
+\end{itemize}
+\begin{lstlisting}
+std::function<int(int)> get_function() {
+  big_object big;
+  auto f = [big] (int i) { big.get(i); }
+  return f;
+}
+\end{lstlisting}
+
+\pause
+\begin{itemize}
+  \item Capture \textenum{by reference}.
+    \begin{itemize}
+      \item Might generate \textbad{dangling reference}.
+    \end{itemize}
+\end{itemize}
+\begin{lstlisting}
+std::function<int(int)> get_function() {
+  big_object big;
+  auto f = [&big] (int i) { big.get(i); }
+  return f;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Move capturing with init captures}
+\begin{itemize}
+  \item Take advantage of \textgood{init captures} to \textmark{move}
+        an object into a lambda.
+\end{itemize}
+\begin{lstlisting}
+std::function<int(int)> get_function() {
+  big_object big;
+  auto f = [obj = std::move(big)] (int i) { obj.get(i); }
+  return f;
+}
+
+void g() {
+  auto func = get_function();
+  int x = func(2);
+  int y = func(3);
+  // ...
+}
+\end{lstlisting}
+\end{frame}
