@@ -1,0 +1,97 @@
+\section{Modifiers and closure objects}
+
+\begin{frame}[t,fragile]{Mutability in lambdas}
+  \begin{itemize}
+    \item Lambdas generate in the object function, 
+          a call operator that is a \cppkey{const} member function.
+    \item When the lambda is specified to be \cppkey{mutable},
+          the generated call operator is \textmark{non-const}.
+  \end{itemize}
+\begin{lstlisting}
+int ini=0;
+std::generate(v.begin(), v.end(), [=]() mutable { return ini++; });
+std::generate(w.begin(), w.end(), [=]() mutable -> int { return ini++; });
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Closure object}
+  \begin{itemize}
+    \item The \textmark{evaluation} of a \textgood{lambda expression} 
+          generates a temporal object called \textgood{closure object}.
+    \item A \textgood{closure object} behaves as a \textmark{function object}.
+    \item The type of a \textgood{lambda expression} is the same
+          than the type of the \textmark{closure object}:
+      \begin{itemize}
+        \item Unique type.
+        \item Unnamed type.
+        \item Class type that is not a union.
+        \item Non aggregate.
+        \item Declared in the smallest scope enclosing the lambda expression.
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+auto comp = [](const record & x, const record & y) { return x.id < y.id; }
+std::sort(v1.begin(), v1.end(), comp);
+bool test = comp(2,4);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t]{Closure generated members}
+  \begin{itemize}
+    \item It has a \textbad{deleted} \textgood{default constructor}. 
+    \item It has a \textbad{deleted} \textgood{copy assignment operator}.
+    \item It has an \textmark{implicitly declared} \textgood{copy constructor}.
+    \item May have an \textmark{implicitly declared} \textgood{move constructor}.
+    \item It has an \textmark{implicitly declared} \textgood{destructor}.
+    \item It has a \textgood{function call operator} 
+          (\cppkey{operator()}) which is \cppkey{inline}.
+      \begin{itemize}
+        \item Parameters and return type are the same than those in the lambda.
+        \item The operator is \cppkey{const} if the lambda was declared without \cppkey{mutable}.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Conversion to function pointer}
+  \begin{itemize}
+    \item \textenum{Condition}:
+      \begin{itemize}
+        \item It must have an \textmark{empty capture}.
+      \end{itemize}
+    \item Generated \textgood{conversion operator}:
+      \begin{itemize}
+        \item Conversion to \textgood{function pointer}.
+        \item \textgood{Conversion operator} \textmark{public}, \textmark{non-virtual}, 
+              \textmark{non-explicit}, and \textmark{constant}.
+        \item \textmark{Same} \textgood{parameters} and \textgood{return type}.
+        \item Returns a \textgood{function pointer} whose invocation has the
+              \textmark{same effect} than invoking the
+              \textgood{function call operator} from the \textgood{closure object}.
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+void set_func(void (*f)());
+set_func([]{ std::cerr << "Bye"; });
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Dangers of capture by reference}
+  \begin{itemize}
+    \item Reference capture might give \textgood{benefits}, but \ldots
+    \pause
+    \item Has \textbad{dangers} when \textgood{lambda} 
+          \textmark{outlives} a captured value.
+      \begin{itemize}
+        \item \textmark{Example}: \textgood{Callbacks}
+      \end{itemize}
+  \end{itemize}
+\begin{lstlisting}
+void f() {
+  int result = 0;
+  register_adder([&result](int x) { result+=x; });
+  // ...
+}
+\end{lstlisting}
+\end{frame}
+
+

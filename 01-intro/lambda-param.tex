@@ -1,0 +1,66 @@
+\section{Parameters and return values}
+
+\begin{frame}[t,fragile]{Omitting parameters}
+  \begin{itemize}
+    \item If the lambda takes no parameter, the parenthesis can be omitted.
+  \end{itemize}
+\begin{lstlisting}
+std::thread t([](){ do_something(); });
+
+std::thread t([]{ do_something(); });
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Specifying the return type}
+  \begin{itemize}
+    \item The \textgood{return type} of a lambda may be 
+          \textmark{explictly specified}.
+    \item \textmark{Postfix notation} is used to specify the \textgood{return type}.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+std::sort(v.begin(), v.end(), 
+  [](const record & x, const record & y)
+  { 
+    return x.id < y.id;
+  }
+);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Omitting the return type}
+\begin{itemize}
+  \item \textmark{Return type} can be \textgood{automatically deduced}
+        when the body has a \textmark{return statement}.
+\end{itemize}
+
+\pause
+\begin{itemize}
+  \item \textenum{Rules}:
+  \begin{itemize}
+    \item The \textmark{return type} is the \textgood{type of the expression}.
+    \item If needed, the following conversions are applied:
+      \begin{itemize}
+        \item \textmark{l-value} to \textmark{r-value}.
+        \item \textmark{array} to \textmark{pointer}.
+        \item \textmark{function} to \textmark{function pointer}.
+      \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\begin{lstlisting}
+[&] { return x+y; }
+[&] () -> decltype(x+y) { return x+y; }
+\end{lstlisting}
+
+\pause
+  \begin{itemize}
+    \item Otherwise, \textmark{return type} is deemed to be \cppkey{void}.
+  \end{itemize}
+\begin{lstlisting}
+[] { do_something(); }
+[] () -> void { do_something(); }
+\end{lstlisting}
+\end{frame}
+
+

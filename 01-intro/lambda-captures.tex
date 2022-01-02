@@ -1,0 +1,265 @@
+\section{Lambda captures}
+
+\begin{frame}[t,fragile]{What variables can a lambda access?}
+  \begin{itemize}
+    \item \textmark{Default access}:
+      \begin{itemize}
+        \item Global variables.
+        \item Local static variables.
+      \end{itemize}
+    \mode<presentation>{\vfill}
+    \item Access needing an \textmark{explict declaration}:
+      \begin{itemize}
+        \item \textgood{Default capture}: 
+              Can be \textmark{by value} or \textmark{by reference}.
+        \item \textgood{Explicit capture of a variable}: 
+              Can be \textmark{by value} or \textmark{by reference}.
+        \item \textgood{Explicit capture of} \cppkey{this}.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Default access}
+\begin{lstlisting}[escapechar=@]
+double s = 0.0;
+
+void f(int i) {
+  char c = 'a';
+  static int n = 0;
+
+  vector<int> v { 1, 2, 3};
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << x << "\n"; }); // OK@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << s << "\n"; }); // OK. s is global@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << i << "\n"; }); // Error. i non accessible@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << c << "\n"; }); // Error. c non accessible@\pause@
+  for_each(v.begin(), v.end(),
+    [](int x) { cout << n << "\n"; }); // OK. n is static
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Explicit capture by value}
+  \begin{itemize}
+    \item Names of captured variables are enumerated.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+void print_range(std::vector<int> & v, int minv, int maxv) {
+  std::for_each(v.begin(), v.end(),
+    [minv,maxv](int x) { 
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << "\n";
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Implicit capture by value}
+  \begin{itemize}
+    \item Specified with \cppid{=} in the capture list.
+    \item All objects in the enclosing scope are captured by value.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+void print_range(std::vector<int> & v, int minv, int maxv) {
+  std::for_each(v.begin(), v.end(),
+    [=](int x) { 
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << "\n";
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Capture by value}
+\begin{itemize}
+  \item Are all values copied into the capture object?
+    \begin{itemize}
+      \pause
+      \item No.
+        \begin{itemize}
+          \item Only values effectively used in the lambda.
+        \end{itemize}
+        \item Capture only specifies accessibility.
+    \end{itemize}
+\end{itemize}
+
+\pause
+\begin{lstlisting}
+void print_range(std::vector<int> & v, int minv, int maxv) {
+  int w[512];
+  std::for_each(v.begin(), v.end(),
+    [=](int x) { // Note: w is not copied
+       if (x > maxv) return;
+       if (x < minv) return;
+       cout << x << "\n";
+  });
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Explicit capture by reference}
+  \begin{itemize}
+    \item Names of captured variables are enumerate, 
+          prepending \cppid{\&} to each of them.
+    \item Captures \textmark{by value} and \textmark{by reference} can be combined.
+    \item There is \textbad{no notion} of 
+          \textmark{capturing by constant reference}.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+int add_range(std::vector<int> & v, int minv, int maxv) {
+  int result = 0;
+  std::for_each(v.begin(), v.end(),
+    [&result, minv, maxv](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       result += x;
+  });
+  return result;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Implicit capture by reference}
+  \begin{itemize}
+    \item Specified with \cppid{\&} in the capture list.
+    \item All objects from the enclosing scope are captured by reference.
+  \end{itemize}
+\pause
+\begin{lstlisting}[escapechar=@]
+int add_range(std::vector<int> & v, int minv, int maxv) {
+  int result = 0;
+  std::for_each(v.begin(), v.end(),
+    [&](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       result += x;
+  });
+  return result;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Combining captures}
+  \begin{itemize}
+    \item An implicit capture may be specified, followed by explicit captures.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+int add_range(std::vector<int> & v, int minv, int maxv) {
+  int result = 0;
+  std::for_each(v.begin(), v.end(),
+    [=,&result](int x) {
+       if (x > maxv) return;
+       if (x < minv) return;
+       result += x;
+  });
+  return result;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Accessing object members from a lambda}
+  \begin{itemize}
+    \item A lambda in a member function \textbad{cannot explicitly capture}
+          data members.
+  \end{itemize}
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int add_range() {
+    int result = 0;
+    std::for_each(v.begin(), v.end(), 
+      [minv,maxv,&result](int x) { // Error
+         if (x > maxv) return;
+         if (x < minv) return;
+         result += x;
+    });
+    return result;
+  }
+};
+\end{lstlisting}
+\end{frame}
+ 
+\begin{frame}[t,fragile]{Accessing by value}
+  \begin{itemize}
+    \item The pointer to the object (\cppkey{this}) can be implicitly captured \textgood{by value}.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int add_range() {
+    int result = 0;
+    std::for_each(v.begin(), v.end(), 
+      [=,&result](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         result += x;
+    });
+    return result;
+  }
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Accessing by reference}
+  \begin{itemize}
+    \item The pointer to the object can be implicitly captured \textgood{by reference}.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int add_range() {
+    int result = 0;
+    std::for_each(v.begin(), v.end(), 
+      [&](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         result += x;
+    });
+    return result;
+  }
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[t,fragile]{Explicitly capturing \texttt{this}}
+  \begin{itemize}
+    \item The pointer to the object can be explicitly captured.
+  \end{itemize}
+\pause
+\begin{lstlisting}
+struct X {
+  std::vector<int> v;
+  int minv;
+  int maxv;
+  int add_range() {
+    int result{ 0 };
+    std::for_each(v.begin(), v.end(), 
+      [this,&result](int x) {
+         if (x > maxv) return;
+         if (x < minv) return;
+         result += x;
+    });
+    return result;
+  }
+};
+\end{lstlisting}
+\end{frame}
+
+

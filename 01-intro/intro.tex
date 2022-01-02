@@ -1,0 +1,170 @@
+\section{What is a lambda expression?}
+
+\begin{frame}[t,fragile]{Function objects in classic C++}
+\mode<presentation>{\vspace{-1em}}
+\begin{itemize}
+  \item A \textmark{function object} is an object that may behave as a function.
+    \begin{itemize}
+      \item It has a member \cppkey{operator()}.
+    \end{itemize}
+\end{itemize}
+
+\begin{block}{Defining a function object type}
+\begin{lstlisting}
+struct square {
+  double operator()(double x) const noexcept { return x*x; }
+};
+\end{lstlisting}
+\end{block}
+
+\mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item It can be passed to another function.
+\begin{block}{Using a function object}
+\begin{lstlisting}
+void f(std::vector<double> & v, std::vector<double> & w) {
+  square sq;
+  std::transform(std::begin(v), std::end(v), std::begin(v), sq);
+  std::transform(std::begin(w), std::end(w), std::begin(w), square{});
+}
+\end{lstlisting}
+\end{block}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Why function objects?}
+\begin{itemize}
+  \item Simple uses can be obatained with a regular function.
+\end{itemize}
+\begin{block}{Passing a function to an algorithm}
+\begin{lstlisting}
+double square(double x) noexcept { return x*x; }
+
+void f(const std::vector<double> & v, std::vector<double> & w) {
+  std::transform(std::begin(v), std::end(v), std::back_inserter(w), square);
+  //...
+}
+\end{lstlisting}
+\end{block}
+
+\mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item Why using function objects?
+    \begin{itemize}
+      \item The may have input state.
+      \item They may have output state.
+      \item Better passing an object than passing a function pointer.
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[t,fragile]{Parametrized function objects}
+\begin{itemize}
+  \item A function object may store parameters that cannot be passed
+        as arguments to a function
+\end{itemize}
+\begin{block}{Linear transformation}
+\begin{lstlisting}
+struct linear_transform {
+  double a, b;
+  double operator()(double x) const noexcept { return a * x + b; }
+};
+
+auto f(const std::vector<double> & v, std::vector<double> & w) {
+  std::transform(std::begin(v), std::end(v), std::back_inserter(w), 
+      linear_transform{2.5, 7.3});
+}
+\end{lstlisting}
+\end{block}
+
+\begin{itemize}
+  \item \cppid{std::transform()} requires a function taking one argument.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Functions objects with state}
+\begin{itemize}
+  \item A function object may store and update state.
+\end{itemize}
+\begin{block}{Adding values in a vector}
+\begin{lstlisting}
+struct adder {
+  double sum = 0.0;
+  double operator()(double x) noexcept { sum += x; }
+}
+
+auto f(const std::vector<double> & v) {
+  adder a{0};
+  std::for_each(std::begin(v), std::end(v), a); 
+  return a.sum;
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item \textbad{Note}: This is better done with \cppid{std::reduce()}.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[t,fragile]{Lambda expression}
+\begin{itemize}
+  \item A mechanism to specify a function object.
+  \item Simple way of defining and passing a function to another context.
+\end{itemize}
+
+\begin{block}{Adding values in a vector}
+\begin{lstlisting}
+void f(const std::vector<double< & v, std::vector<double> & w) {
+  std::transform(v.begin(), v.end(), std::back_inserter(w),
+                 [](double x) { return x*x; });
+}
+\end{lstlisting}
+\end{block}
+\begin{itemize}
+  \item The expression
+\begin{lstlisting}
+[](double x) { return x*x; }
+\end{lstlisting}
+  \item is a \textmark{lambda expression}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[t,fragile]{Anatomy of lambda expression}
+\begin{lstlisting}
+std::transform(v.begin(), v.end(), std::back_inserter(w),
+  [](double x) { 
+    return x*x; 
+  }
+);
+\end{lstlisting}
+
+\mode<presentation>{\vfill}
+\begin{itemize}
+  \pause
+  \item \textmark{Lambda introducer}: 
+        Marks the beginning of a lambda expression.
+\begin{lstlisting}[escapechar=@]
+@{\color{red}[]}@(double x) {
+\end{lstlisting}
+
+  \pause
+  \item \textmark{Lambda parameters}: 
+        Equivalent to function parameters.
+\begin{lstlisting}[escapechar=@]
+[]@{\color{red}(double x)}@ {
+\end{lstlisting}
+
+  \pause
+  \item \textmark{Lambda body}: 
+        Equivalent to function body.
+\begin{lstlisting}[escapechar=@]
+[](double x) @{\color{red}\{ return x*x; \}}
+\end{lstlisting}
+
+  \pause
+  \item \textmark{Return type}: 
+        Usually automatically deduced.
+\end{itemize}
+\end{frame}
+
