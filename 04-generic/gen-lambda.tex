@@ -1,0 +1,58 @@
+\section{Generic lambdas (C++14)}
+
+\begin{frame}[t]{Example: Printing a container in C++11}
+\mode<presentation>{
+\begin{columns}[T]
+\column{.5\textwidth}
+\lstinputlisting[lastline=14]{04-generic/gen-lambda/src/print_cont.cpp}
+\column{.5\textwidth}
+\lstinputlisting[firstline=16]{04-generic/gen-lambda/src/print_cont.cpp}
+\end{columns}
+}
+\mode<article>{
+\lstinputlisting{04-generic/gen-lambda/src/print_cont.cpp}
+}
+\end{frame}
+
+\begin{frame}[t,fragile]{Polymorphic lambdas}
+\begin{itemize}
+  \item Allow writing a lambda expression where one or more parameters are \textmark{generic}.
+    \begin{itemize}
+      \item Use \cppkey{auto}.
+    \end{itemize}
+\end{itemize}
+\pause
+\begin{lstlisting}
+std::sort(v.begin(), v.end(), [](const auto & x, const auto & y) {
+  return x < y;
+});
+\end{lstlisting}
+
+\mode<presentation>{\vfill\pause}
+\begin{itemize}
+  \item Generates a class with a \textmark{templated} \textgood{call operator}.
+\end{itemize}
+\begin{lstlisting}
+class compiler_generated {
+public:
+  template <typename T1, typename T2>
+  bool operator()(const T1 & x, const T2 & y) const {
+    return x < y;
+  }
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[t]{Example: Printing a container in C++14}
+\mode<presentation>{
+\begin{columns}[T]
+\column{.5\textwidth}
+\lstinputlisting[lastline=14]{04-generic/gen-lambda/src/print_cont_gen.cpp}
+\column{.5\textwidth}
+\lstinputlisting[firstline=16]{04-generic/gen-lambda/src/print_cont_gen.cpp}
+\end{columns}
+}
+\mode<article>{
+\lstinputlisting{04-generic/gen-lambda/src/print_cont_gen.cpp}
+}
+\end{frame}

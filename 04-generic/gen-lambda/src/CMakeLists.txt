@@ -1,0 +1,2 @@
+add_executable(print_cont print_cont.cpp)
+add_executable(print_cont_gen print_cont_gen.cpp)

@@ -19,6 +19,7 @@ include guide/Makefile.def
 include 01-intro/Makefile.def
 include 02-wrappers/Makefile.def
 include 03-init-captures/Makefile.def
+include 04-generic/Makefile.def
 
 ALL_FINAL_PDF=\
 $(FINAL_DIR) \
@@ -45,3 +46,4 @@ include $(GUIDE_BASE)/Makefile.mk
 include $(INTRO_BASE)/Makefile.mk
 include $(WRAPPERS_BASE)/Makefile.mk
 include $(INITCAP_BASE)/Makefile.mk
+include $(GENERIC_BASE)/Makefile.mk
