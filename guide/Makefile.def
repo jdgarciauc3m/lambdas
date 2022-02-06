@@ -8,7 +8,8 @@ guide/titlepage.tex \
 guide/license.tex \
 guide/foreword.tex \
 guide/ack.tex \
-bib/*.bib
+bib/*.bib \
+exercises/*.tex
 
 GUIDE_OUT=guide-lambdas
 

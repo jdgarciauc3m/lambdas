@@ -1,0 +1,123 @@
+\section{Exercise \arabic{section}}
+\label{ej:lambdafiltro}
+
+Given the following \cppid{customer} structure:
+\begin{lstlisting}
+struct customer {
+  int id;
+  std::string name;
+  std::string family_name;
+
+  customer(int i, std::string const &n, std::string const &fn)
+      : id{i}, name{n}, family_name{fn} {}
+};
+\end{lstlisting}
+
+Write a function \cppid{filter\_and\_sort} that takes
+\begin{itemize}
+\item A \cppid{vector} with customer information.
+\item A generic predicate on a customer.
+\item A generic comparison criteria between two customers.
+\end{itemize}
+
+The function should return a new \cppid{vector} where only customers that satisfy the predicate are stored. Such a vector should be sorted according to the comparison criteria.
+
+Complete the call \cppid{filter\_and\_sort} in the main program so that
+the program prints sorted by family name, and the by name all the people in the list
+whose \cppid{id} is greater than \cppid{1}.
+Use lambda expressions for passing the criteria to the function \cppid{filter\_and\_sort()}.
+\begin{lstlisting}
+int main() {
+  std::vector<customer> v;
+  v.emplace_back(3, "David", "Wheeler");
+  v.emplace_back(11, "J. Daniel", "Garcia");
+  v.emplace_back(2, "Bjarne", "Stroustrup");
+  v.emplace_back(0, "Herb", "Sutter");
+  v.emplace_back(5, "Carlos", "Garcia");
+
+  auto r = filter_and_sort(v, /* Fill in the arguments*/);
+
+  for (auto const &c : r) {
+    std::cout << "Id: " << c.id;
+    std::cout << " Name: " << c.name;
+    std::cout << " Family name: " << c.family_name << "\n";
+  }
+}
+\end{lstlisting}
+
+\section{Exercise \arabic{section}}
+
+Rewrite exercise~\ref{ej:lambdafiltro} using objects of
+type \cppid{std::function} as parameters of function \cppid{filter\_and\_sort()}
+and avoiding \cppkey{templates}.
+
+\section{Exercise \arabic{section}}
+
+Write a function taking two iterators and a set of operations.
+The function shall traverse all elements in the sequence and apply
+sequentially each of the operations.
+
+Use the function to transform a vector of strings and for each string
+remove vowels and convert the resulting string to uppercase as shown below:
+
+\begin{lstlisting}
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <iostream>
+
+template <typename T, typename ... Ops>
+void apply_comp_helper(T & v, Ops ... ops);
+
+template <typename T, typename Op, typename ... Ops>
+void apply_comp_helper(T & v, Op op, Ops ... ops) {
+  op(v);
+  if (sizeof...(ops) > 0)
+    apply_comp_helper(v, ops...);
+}
+
+template <typename T>
+void apply_comp_helper(T & v) {}
+
+template <typename It, typename ... Ops>
+void apply_comp(It first, It last, Ops ... ops) {
+  for (auto i=first; i!=last; ++i) {
+    apply_comp_helper(*i, ops...);
+  }
+}
+
+std::string remove_vowels(const std::string & s) {
+  std::string r;
+  r.reserve(s.size());
+  for (auto c : s) {
+    switch (c) {
+      case 'a': case 'A':
+      case 'e': case 'E':
+      case 'i': case 'I':
+      case 'o': case 'O':
+      case 'u': case 'U':
+        break;
+      default:
+        r.push_back(c);
+    }
+  }
+  return r;
+}
+
+int main() {
+  std::vector<std::string> v;
+  v.push_back("Daniel");
+  v.push_back("Carlos");
+  v.push_back("Jose");
+  v.push_back("Manuel");
+  apply_comp(v.begin(), v.end(),
+             [](std::string & s) { s = remove_vowels(s); },
+             [](std::string & s) {
+               std::transform(s.begin(), s.end(), s.begin(), toupper);
+             }
+  );
+  for (auto x : v) {
+    std::cout << x << "\n";
+  }
+}
+\end{lstlisting}
