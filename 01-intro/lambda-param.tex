@@ -20,11 +20,19 @@ std::thread t([]{ do_something(); });
 \pause
 \begin{lstlisting}
 std::sort(v.begin(), v.end(), 
-  [](const record & x, const record & y)
+  [](const record & x, const record & y) -> bool
   { 
     return x.id < y.id;
   }
 );
+
+std::sort(v.begin(), v.end(), 
+  [](const record & x, const record & y) // return type deduced
+  { 
+    return x.id < y.id;
+  }
+);
+
 \end{lstlisting}
 \end{frame}
 

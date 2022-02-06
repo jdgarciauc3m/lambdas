@@ -27,17 +27,17 @@ void f(int i) {
   char c = 'a';
   static int n = 0;
 
-  vector<int> v { 1, 2, 3};
+  std::vector<int> v { 1, 2, 3};
   for_each(v.begin(), v.end(),
-    [](int x) { cout << x << "\n"; }); // OK@\pause@
+    [](int x) { std::cout << x << "\n"; }); // OK@\pause@
   for_each(v.begin(), v.end(),
-    [](int x) { cout << s << "\n"; }); // OK. s is global@\pause@
+    [](int x) { std::cout << s << "\n"; }); // OK. s is global@\pause@
   for_each(v.begin(), v.end(),
-    [](int x) { cout << i << "\n"; }); // Error. i non accessible@\pause@
+    [](int x) { std::cout << i << "\n"; }); // Error. i non accessible@\pause@
   for_each(v.begin(), v.end(),
-    [](int x) { cout << c << "\n"; }); // Error. c non accessible@\pause@
+    [](int x) { std::cout << c << "\n"; }); // Error. c non accessible@\pause@
   for_each(v.begin(), v.end(),
-    [](int x) { cout << n << "\n"; }); // OK. n is static
+    [](int x) { std::cout << n << "\n"; }); // OK. n is static
 }
 \end{lstlisting}
 \end{frame}
@@ -53,7 +53,7 @@ void print_range(std::vector<int> & v, int minv, int maxv) {
     [minv,maxv](int x) { 
        if (x > maxv) return;
        if (x < minv) return;
-       cout << x << "\n";
+       std::cout << x << "\n";
   });
 }
 \end{lstlisting}
@@ -71,7 +71,7 @@ void print_range(std::vector<int> & v, int minv, int maxv) {
     [=](int x) { 
        if (x > maxv) return;
        if (x < minv) return;
-       cout << x << "\n";
+       std::cout << x << "\n";
   });
 }
 \end{lstlisting}
@@ -98,7 +98,7 @@ void print_range(std::vector<int> & v, int minv, int maxv) {
     [=](int x) { // Note: w is not copied
        if (x > maxv) return;
        if (x < minv) return;
-       cout << x << "\n";
+       std::cout << x << "\n";
   });
 }
 \end{lstlisting}
